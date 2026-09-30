@@ -695,6 +695,17 @@ def generate_report(
     .data-table th:first-child,.data-table td:first-child{text-align:left}
     code{background:#e2e8f0;padding:2px 5px;border-radius:4px}
     footer{margin-top:45px;color:#64748b;font-size:12px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 24px}
+    .tab-button{border:1px solid #cbd5e1;background:white;color:#334155;border-radius:9px;padding:10px 15px;font-weight:700;cursor:pointer}
+    .tab-button.active{background:#172554;color:white;border-color:#172554}
+    .tab-panel{display:none}.tab-panel.active{display:block}
+    .catalog-summary{margin:12px 0 16px;color:#475569}
+    .table-scroll{overflow-x:auto;background:white;border-radius:12px;border:1px solid #e5e7eb}
+    .catalog-table{width:100%;border-collapse:collapse;min-width:900px}
+    .catalog-table th,.catalog-table td{padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}
+    .catalog-table th{background:#f8fafc;color:#172554}
+    .catalog-table a{color:#1d4ed8;text-decoration:none;font-weight:700}
+    .catalog-table a:hover{text-decoration:underline}
     """
 
     report = f"""<!doctype html>
@@ -711,6 +722,12 @@ def generate_report(
 <p>Modelagem e análise do mercado imobiliário de Porto Alegre com ITBI, geocodificação, Censo 2022, IPCA e estatística espacial.</p>
 </header>
 <main>
+<nav class="tabs" aria-label="Seções do relatório">
+<button class="tab-button active" data-tab="resumo">Resumo e resultados</button>
+<button class="tab-button" data-tab="catalogo">Catálogo de outputs</button>
+</nav>
+
+<section id="tab-resumo" class="tab-panel active">
 <h2>Resumo executivo</h2>
 <div class="kpis">
 <div class="kpi">Último ano completo<strong>{latest_full_year}</strong></div>
@@ -778,14 +795,37 @@ def generate_report(
 <li><code>data/processed/itbi_transactions_qc.parquet</code> e amostra analítica.</li>
 <li>Indicadores municipais, mensais, YTD, por bairro, Região do OP e setor.</li>
 <li>Mapas, Moran global, Local Moran/LISA e medidas de concentração espacial.</li>
-<li>Gráficos consolidados e este relatório HTML.</li>
+<li>Gráficos consolidados e este relatório HTML em <code>outputs/property_valuation_report.html</code>.</li>
 </ul>
 
 <h2>Leituras iniciais dos indicadores</h2>
 <p>Entre os anos completos, a amostra municipal alcançou {int(city['n_transacoes'].max()):,} transações no maior volume anual observado. Em {latest_full_year}, o valor real mediano da base tributária por m² foi de R$ {latest_full['valor_m2_mediano_real']:,.0f}. Para {latest_year}, os indicadores anuais são parciais e a referência comparável é a tabela YTD.</p>
+</section>
+
+<section id="tab-catalogo" class="tab-panel">
+<h2>Catálogo de mapas, gráficos e tabelas</h2>
+<p>Esta aba processa um inventário dos arquivos efetivamente encontrados em
+<code>outputs/maps</code>, <code>outputs/figures</code> e
+<code>outputs/tables</code>. Cada item indica o nome do arquivo, seu caminho
+no projeto e o que ele mostra.</p>
+{catalog_html}
+</section>
 
 <footer>Relatório processado em {html.escape(utc_now_iso())}. Gerado por <code>scripts/10_generate_report.py</code>.</footer>
 </main>
+<script>
+document.querySelectorAll('.tab-button').forEach((button) => {{
+  button.addEventListener('click', () => {{
+    const target = button.dataset.tab;
+    document.querySelectorAll('.tab-button').forEach((item) => {{
+      item.classList.toggle('active', item === button);
+    }});
+    document.querySelectorAll('.tab-panel').forEach((panel) => {{
+      panel.classList.toggle('active', panel.id === 'tab-' + target);
+    }});
+  }});
+}});
+</script>
 </body>
 </html>"""
 
