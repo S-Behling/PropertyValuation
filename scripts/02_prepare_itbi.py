@@ -684,7 +684,14 @@ def profile_columns(df: pd.DataFrame) -> pd.DataFrame:
             "n_unique": unique,
         }
 
-        if pd.api.types.is_numeric_dtype(series):
+        if pd.api.types.is_bool_dtype(series.dtype):
+            row.update(
+                {
+                    "n_true": int(series.fillna(False).sum()),
+                    "n_false": int(series.eq(False).sum()),
+                }
+            )
+        elif pd.api.types.is_numeric_dtype(series.dtype):
             valid = pd.to_numeric(series, errors="coerce").dropna()
             if len(valid):
                 row.update(
