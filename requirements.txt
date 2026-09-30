@@ -1,48 +1,40 @@
-# Terminal commands to set up the virtual environment and install dependencies:
-
-# INSTALACAO DEPENDENCIAS
-# no terminal: pip install -r requirements.txt
-
-# CONFIGURACAO DO AMBIENTE VIRTUAL
+# INSTALACAO
+# Processa a instalacao das dependencias do projeto:
+# pip install -r requirements.txt
+#
+# Processa a criacao do ambiente virtual no Windows:
 # python -m venv .venv
-# ativar o ambiente virtual (Windows): .venv\Scripts\activate
+# .venv\Scripts\activate
 
-# DEPENDENCIAS
-# Análise de dados
+# Analisa e processa dados tabulares
 pandas>=2.2,<3.0
 numpy
 scipy
+pyarrow>=16,<22
+xlsxwriter
 
-# Geoprocessamento
+# Processa geometrias e associacoes espaciais
 geopandas>=1.0,<2.0
 shapely
 pyproj
 fiona
 rtree
-pyogrio
+pyogrio>=0.9,<1.0
 
-# Redes urbanas / OSM
+# Processa redes urbanas e dados OSM
 osmnx
 networkx
 
-# Visualização
+# Processa matching aproximado de enderecos
+rapidfuzz>=3.9,<4.0
+
+# Processa visualizacoes
 matplotlib
 contextily
 
-# Jupyter
+# Processa notebooks e exploracao interativa
 jupyter
 ipykernel
 
-# Arquivos tabulares e colunares
-pyarrow>=16,<22
-xlsxwriter
-
-# Arquivos geográficos
-pyogrio>=0.9,<1.0
-
-# Utilidades
+# Processa acompanhamento de rotinas longas
 tqdm
-scipy
-
-
-rapidfuzz>=3.9,<4.0
