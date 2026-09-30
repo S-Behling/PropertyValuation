@@ -229,9 +229,38 @@ def parse_number_series(series: pd.Series) -> pd.Series:
 
 
 def parse_date_series(series: pd.Series) -> pd.Series:
-    """Datas do ITBI, priorizando dia/mês/ano."""
+    """Converte datas do ITBI sem misturar formatos ISO e brasileiro.
+
+    Arquivos anuais podem combinar formatos como:
+    - 2024/05/31 14:20:00
+    - 31/05/2024
+    - 31/05/2024 14:20:00
+
+    Strings iniciadas por ano são tratadas como ISO/year-first. As demais são
+    interpretadas como dia/mês/ano. Isso evita o warning do pandas e, mais
+    importante, permite auditar falhas reais de conversão.
+    """
     s = series.astype("string").str.strip().replace(list(NULL_TOKENS), pd.NA)
-    parsed = pd.to_datetime(s, errors="coerce", dayfirst=True)
+    parsed = pd.Series(pd.NaT, index=s.index, dtype="datetime64[ns]")
+
+    iso_mask = s.str.match(r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}", na=False)
+    other_mask = s.notna() & ~iso_mask
+
+    if iso_mask.any():
+        parsed.loc[iso_mask] = pd.to_datetime(
+            s.loc[iso_mask],
+            errors="coerce",
+            yearfirst=True,
+            dayfirst=False,
+        )
+
+    if other_mask.any():
+        parsed.loc[other_mask] = pd.to_datetime(
+            s.loc[other_mask],
+            errors="coerce",
+            dayfirst=True,
+        )
+
     return parsed
 
 
@@ -362,7 +391,17 @@ def clean_unit_records(df: pd.DataFrame) -> pd.DataFrame:
         df[column] = parse_number_series(df[column])
 
     for column in DATE_COLUMNS:
-        df[column] = parse_date_series(df[column])
+        raw_date = (
+            df[column]
+            .astype("string")
+            .str.strip()
+            .replace(list(NULL_TOKENS), pd.NA)
+        )
+        df[f"{column}_raw"] = raw_date
+        df[column] = parse_date_series(raw_date)
+        df[f"flag_{column}_parse_error"] = (
+            raw_date.notna() & df[column].isna()
+        )
 
     # Ano de construção é conceitualmente inteiro, mas nullable.
     df["ano_construcao"] = df["ano_construcao"].round().astype("Int64")
@@ -672,6 +711,10 @@ def year_summary(units: pd.DataFrame, tx: pd.DataFrame) -> pd.DataFrame:
             unique_unit_content=("record_content_id", "nunique"),
             exact_duplicate_rows=("flag_duplicado_exato", "sum"),
             paid_unit_rows=("flag_pago", "sum"),
+            payment_date_raw_rows=("data_pagamento_raw", lambda s: int(s.notna().sum())),
+            payment_date_parse_errors=("flag_data_pagamento_parse_error", "sum"),
+            estimate_date_raw_rows=("data_estimativa_raw", lambda s: int(s.notna().sum())),
+            estimate_date_parse_errors=("flag_data_estimativa_parse_error", "sum"),
             valid_base_unit_rows=("flag_base_valida", "sum"),
             valid_area_unit_rows=("flag_area_valida", "sum"),
             single_unit_price_rows=("flag_preco_unitario_confiavel", "sum"),
@@ -710,6 +753,14 @@ def quality_summary(units: pd.DataFrame, tx: pd.DataFrame, files: list[Path]) ->
             "rows": int(len(units)),
             "exact_duplicate_rows": count_true(units, "flag_duplicado_exato"),
             "paid_rows": count_true(units, "flag_pago"),
+            "payment_date_raw_rows": int(units["data_pagamento_raw"].notna().sum()),
+            "payment_date_parse_errors": count_true(
+                units, "flag_data_pagamento_parse_error"
+            ),
+            "estimate_date_raw_rows": int(units["data_estimativa_raw"].notna().sum()),
+            "estimate_date_parse_errors": count_true(
+                units, "flag_data_estimativa_parse_error"
+            ),
             "cancelled_rows": count_true(units, "flag_cancelado"),
             "invalid_construction_year_rows": count_true(
                 units, "flag_ano_construcao_invalido"
@@ -732,6 +783,7 @@ def quality_summary(units: pd.DataFrame, tx: pd.DataFrame, files: list[Path]) ->
             "base_de_calculo é a base tributária publicada pela Prefeitura; não é renomeada como preço de venda.",
             "guias multiunidade são inferidas pela sequência de linhas conforme o dicionário oficial do ITBI.",
             "valor_m2_base_unitario só é produzido para guias com uma unidade.",
+            "falhas de parsing de data são registradas explicitamente e não convertidas silenciosamente em ausência.",
             "nenhum outlier estatístico é removido nesta etapa.",
         ],
     }
