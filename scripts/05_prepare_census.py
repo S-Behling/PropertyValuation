@@ -132,8 +132,19 @@ def normalize_code(value: object, length: int | None = None) -> str | None:
     return digits
 
 
-def detect_delimiter(sample: bytes) -> str:
-    text = sample.decode("utf-8-sig", errors="replace")
+def detect_encoding(sample: bytes) -> str:
+    """Detecta a codificação sem substituir bytes inválidos silenciosamente."""
+    for encoding in ("utf-8-sig", "utf-8", "cp1252", "latin-1"):
+        try:
+            sample.decode(encoding, errors="strict")
+            return encoding
+        except UnicodeDecodeError:
+            continue
+    return "latin-1"
+
+
+def detect_delimiter(sample: bytes, encoding: str) -> str:
+    text = sample.decode(encoding, errors="strict")
     try:
         return csv.Sniffer().sniff(text, delimiters=";,\t|").delimiter
     except csv.Error:
@@ -160,7 +171,9 @@ def find_zip(directory: Path, patterns: Iterable[str], required: bool = True) ->
     return None
 
 
-def inspect_zip_csv(zip_path: Path) -> tuple[str, str, dict[str, str]]:
+def inspect_zip_csv(
+    zip_path: Path,
+) -> tuple[str, str, str, dict[str, str]]:
     with zipfile.ZipFile(zip_path) as archive:
         members = [
             name
@@ -173,7 +186,9 @@ def inspect_zip_csv(zip_path: Path) -> tuple[str, str, dict[str, str]]:
         member = sorted(members, key=lambda x: (len(x), x))[0]
         with archive.open(member) as stream:
             sample = stream.read(65536)
-        delimiter = detect_delimiter(sample)
+
+        encoding = detect_encoding(sample)
+        delimiter = detect_delimiter(sample, encoding)
 
         with archive.open(member) as stream:
             header = pd.read_csv(
@@ -181,12 +196,12 @@ def inspect_zip_csv(zip_path: Path) -> tuple[str, str, dict[str, str]]:
                 sep=delimiter,
                 dtype="string",
                 nrows=0,
-                encoding="utf-8-sig",
+                encoding=encoding,
                 engine="python",
             )
 
     mapping = {col: normalize_header(col) for col in header.columns}
-    return member, delimiter, mapping
+    return member, delimiter, encoding, mapping
 
 
 def read_filtered_zip(
@@ -196,7 +211,11 @@ def read_filtered_zip(
     municipality: str,
 ) -> pd.DataFrame:
     """Lê apenas Porto Alegre de um CSV nacional dentro de ZIP."""
-    member, delimiter, mapping = inspect_zip_csv(zip_path)
+    member, delimiter, encoding, mapping = inspect_zip_csv(zip_path)
+    print(
+        f"         arquivo={Path(member).name} | "
+        f"encoding={encoding} | separador={delimiter!r}"
+    )
     available = set(mapping.values())
 
     geography_candidates = {
@@ -236,7 +255,7 @@ def read_filtered_zip(
                 sep=delimiter,
                 usecols=use_original,
                 dtype="string",
-                encoding="utf-8-sig",
+                encoding=encoding,
                 engine="python",
                 chunksize=150_000,
                 keep_default_na=True,
