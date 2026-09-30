@@ -15,7 +15,8 @@ PropertyValuation/
 │   ├── 06_deflate_prices.py
 │   ├── 07_quality_control.py
 │   ├── 08_market_indicators.py
-│   └── 09_spatial_analysis.py
+│   ├── 09_spatial_analysis.py
+│   └── 10_generate_report.py
 ├── notebooks/
 │   ├── 01_eda.ipynb
 │   ├── 02_spatial_eda.ipynb
