@@ -1,27 +1,20 @@
-<<<<<<< Updated upstream
-pandas>=2.2,<3.0
-pyarrow>=16,<22
-rapidfuzz>=3.9,<4.0
-geopandas>=1.0,<2.0
-pyogrio>=0.9,<1.0
-=======
 # Terminal commands to set up the virtual environment and install dependencies:
 
 # INSTALACAO DEPENDENCIAS
 # no terminal: pip install -r requirements.txt
 
-# Ativar ambiente virtual:
-python -m venv .venv
-.venv\Scripts\activate
+# CONFIGURACAO DO AMBIENTE VIRTUAL
+# python -m venv .venv
+# ativar o ambiente virtual (Windows): .venv\Scripts\activate
 
 # DEPENDENCIAS
 # Análise de dados
-pandas
+pandas>=2.2,<3.0
 numpy
 scipy
 
 # Geoprocessamento
-geopandas
+geopandas>=1.0,<2.0
 shapely
 pyproj
 fiona
@@ -41,13 +34,15 @@ jupyter
 ipykernel
 
 # Arquivos tabulares e colunares
-pyarrow
+pyarrow>=16,<22
 xlsxwriter
 
 # Arquivos geográficos
-pyogrio
+pyogrio>=0.9,<1.0
 
 # Utilidades
 tqdm
 scipy
->>>>>>> Stashed changes
+
+
+rapidfuzz>=3.9,<4.0
