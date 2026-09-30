@@ -36,7 +36,7 @@ from urllib.request import Request, urlopen
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = PROJECT_ROOT / "raw"
+RAW_DIR = PROJECT_ROOT / "data" / "raw"
 
 USER_AGENT = (
     "PropertyValuation/1.0 "
@@ -509,7 +509,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Baixa novamente mesmo quando o arquivo já existe em raw/.",
+        help="Baixa novamente mesmo quando o arquivo já existe em data/raw/.",
     )
     return parser.parse_args()
 
