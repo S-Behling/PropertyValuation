@@ -125,7 +125,16 @@ def read_sector_mesh(zip_path: Path, municipality: str) -> gpd.GeoDataFrame:
         shp = extract_shapefile(zip_path, Path(temp_dir))
         frame = gpd.read_file(shp)
 
-    frame = frame.rename(columns={c: normalize_header(c) for c in frame.columns})
+    # Não renomear a coluna de geometria: o GeoDataFrame mantém internamente
+    # o nome da geometria ativa. Renomeá-la como uma coluna comum faz o objeto
+    # perder a referência à geometria e quebra acessos como frame.crs/to_crs().
+    geometry_col = frame.geometry.name
+    rename_map = {
+        c: normalize_header(c)
+        for c in frame.columns
+        if c != geometry_col
+    }
+    frame = frame.rename(columns=rename_map)
 
     if "CD_SETOR" not in frame.columns:
         raise ValueError(
@@ -227,7 +236,13 @@ def read_optional_layer(
         shp = extract_shapefile(zip_path, Path(temp_dir))
         frame = gpd.read_file(shp)
 
-    frame = frame.rename(columns={c: normalize_header(c) for c in frame.columns})
+    geometry_col = frame.geometry.name
+    rename_map = {
+        c: normalize_header(c)
+        for c in frame.columns
+        if c != geometry_col
+    }
+    frame = frame.rename(columns=rename_map)
     if frame.crs is None:
         raise ValueError(f"Camada {layer} sem CRS definido.")
 
