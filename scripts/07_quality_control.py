@@ -185,7 +185,8 @@ def load_census(path: Path) -> pd.DataFrame:
             f"Perfil censitário contém {count} linhas com setor duplicado."
         )
 
-    selected = ["sector_join_key"]
+    frame["census_sector_code"] = frame["sector_join_key"]
+    selected = ["sector_join_key", "census_sector_code"]
 
     if "CD_BAIRRO" in frame.columns:
         selected.append("CD_BAIRRO")
@@ -219,23 +220,9 @@ def enrich_with_census(
         validate="many_to_one",
     )
 
-    census_reference = next(
-        (
-            column
-            for column in (
-                "populacao_total",
-                "domicilios_total",
-                "media_moradores_domicilio",
-            )
-            if column in result.columns
-        ),
-        None,
-    )
-
-    if census_reference is None:
-        result["flag_census_matched"] = False
-    else:
-        result["flag_census_matched"] = result[census_reference].notna()
+    # Analisa a existência da chave censitária, e não a presença de uma métrica
+    # específica, porque células censitárias podem estar ausentes/protegidas.
+    result["flag_census_matched"] = result["census_sector_code"].notna()
 
     return result
 
@@ -320,14 +307,16 @@ def add_structural_quality_flags(frame: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
-def _safe_group_label(group_key: object) -> dict[str, Any]:
-    """Processa a chave do groupby em formato serializável para auditoria."""
-    if isinstance(group_key, tuple):
-        return {
-            f"group_{index + 1}": value
-            for index, value in enumerate(group_key)
-        }
-    return {"group_1": group_key}
+def _safe_group_label(
+    group_key: object,
+    group_columns: list[str],
+) -> dict[str, Any]:
+    """Processa a chave do groupby com nomes explícitos para auditoria."""
+    values = group_key if isinstance(group_key, tuple) else (group_key,)
+    return {
+        column: value
+        for column, value in zip(group_columns, values, strict=False)
+    }
 
 
 def add_log_iqr_outlier_flag(
@@ -368,7 +357,7 @@ def add_log_iqr_outlier_flag(
             "n": n,
             "applied": False,
         }
-        record.update(_safe_group_label(group_key))
+        record.update(_safe_group_label(group_key, group_columns))
 
         if n < min_group_size:
             record["reason_not_applied"] = "group_too_small"
