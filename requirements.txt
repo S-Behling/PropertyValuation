@@ -1,5 +1,53 @@
+<<<<<<< Updated upstream
 pandas>=2.2,<3.0
 pyarrow>=16,<22
 rapidfuzz>=3.9,<4.0
 geopandas>=1.0,<2.0
 pyogrio>=0.9,<1.0
+=======
+# Terminal commands to set up the virtual environment and install dependencies:
+
+# INSTALACAO DEPENDENCIAS
+# no terminal: pip install -r requirements.txt
+
+# Ativar ambiente virtual:
+python -m venv .venv
+.venv\Scripts\activate
+
+# DEPENDENCIAS
+# Análise de dados
+pandas
+numpy
+scipy
+
+# Geoprocessamento
+geopandas
+shapely
+pyproj
+fiona
+rtree
+pyogrio
+
+# Redes urbanas / OSM
+osmnx
+networkx
+
+# Visualização
+matplotlib
+contextily
+
+# Jupyter
+jupyter
+ipykernel
+
+# Arquivos tabulares e colunares
+pyarrow
+xlsxwriter
+
+# Arquivos geográficos
+pyogrio
+
+# Utilidades
+tqdm
+scipy
+>>>>>>> Stashed changes
