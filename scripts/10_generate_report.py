@@ -12,7 +12,7 @@ Entradas:
 
 Saídas:
     outputs/figures/*.png
-    reports/property_valuation_report.html
+    outputs/property_valuation_report.html
 
 Metodologia:
 - processa indicadores consolidados das etapas anteriores;
@@ -37,6 +37,7 @@ import argparse
 import base64
 import html
 import io
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -51,7 +52,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TABLES_DIR = PROJECT_ROOT / "outputs" / "tables"
 DEFAULT_MAPS_DIR = PROJECT_ROOT / "outputs" / "maps"
 DEFAULT_FIGURES_DIR = PROJECT_ROOT / "outputs" / "figures"
-DEFAULT_REPORT = PROJECT_ROOT / "reports" / "property_valuation_report.html"
+DEFAULT_REPORT = PROJECT_ROOT / "outputs" / "property_valuation_report.html"
 
 
 def utc_now_iso() -> str:
