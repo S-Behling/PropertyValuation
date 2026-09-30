@@ -86,22 +86,6 @@ def resolve_path(path: Path) -> Path:
     return path if path.is_absolute() else PROJECT_ROOT / path
 
 
-def parse_numeric(series: pd.Series) -> pd.Series:
-    """Processa valores numéricos aceitando ponto ou vírgula decimal."""
-    normalized = (
-        series.astype("string")
-        .str.strip()
-        .str.replace(".", "", regex=False)
-        .str.replace(",", ".", regex=False)
-    )
-
-    # Analisa séries já numéricas separadamente para não remover o ponto decimal.
-    if pd.api.types.is_numeric_dtype(series.dtype):
-        return pd.to_numeric(series, errors="coerce")
-
-    return pd.to_numeric(normalized, errors="coerce")
-
-
 def load_ipca(path: Path) -> pd.DataFrame:
     """Processa o JSON do BCB e constrói um índice mensal encadeado do IPCA."""
     if not path.exists():
