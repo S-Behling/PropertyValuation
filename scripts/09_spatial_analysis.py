@@ -225,9 +225,7 @@ def read_sector_mesh(
     if sectors["sector_final_code"].duplicated().any():
         raise ValueError("Malha contém códigos de setor duplicados.")
 
-    return sectors[["sector_final_code", geometry_column]].rename_geometry(
-        geometry_column
-    )
+    return sectors[["sector_final_code", geometry_column]].copy()
 
 
 def load_sector_indicators(path: Path) -> pd.DataFrame:
@@ -1112,9 +1110,15 @@ def main() -> int:
             )
             generated_maps.append(str(value_map.relative_to(PROJECT_ROOT)))
 
+            volume_geodata = geodata.copy()
+            volume_geodata[VOLUME_METRIC] = pd.to_numeric(
+                volume_geodata[VOLUME_METRIC],
+                errors="coerce",
+            ).fillna(0)
+
             volume_map = maps_dir / f"sector_transactions_{year}.png"
             plot_sector_metric(
-                geodata=geodata,
+                geodata=volume_geodata,
                 column=VOLUME_METRIC,
                 title=f"Número de transações por setor — {year}",
                 legend_label="transações",
