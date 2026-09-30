@@ -306,7 +306,6 @@ def read_cnefe(zip_path: Path) -> pd.DataFrame:
                     dtype="string",
                     encoding="utf-8-sig",
                     engine="python",
-                    low_memory=False,
                 )
             except UnicodeDecodeError:
                 stream.close()
