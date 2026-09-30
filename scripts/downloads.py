@@ -65,6 +65,14 @@ CURRENT_FALLBACKS = {
         IBGE_CENSO_BASE
         + "Agregados_por_Setor_csv/Agregados_por_setores_demografia_BR.zip"
     ),
+    "censo_bairros_basico": (
+        IBGE_CENSO_BASE
+        + "Agregados_por_Bairro_csv/Agregados_por_bairros_basico_BR_20260520.zip"
+    ),
+    "censo_bairros_demografia": (
+        IBGE_CENSO_BASE
+        + "Agregados_por_Bairro_csv/Agregados_por_bairros_demografia_BR.zip"
+    ),
     "censo_dicionario": (
         IBGE_CENSO_BASE
         + "dicionario_de_dados_agregados_por_setores_censitarios_20260520.xlsx"
@@ -72,6 +80,10 @@ CURRENT_FALLBACKS = {
     "renda_setores": (
         IBGE_RENDA_BASE
         + "Agregados_por_setores_renda_responsavel_BR_20260508_csv.zip"
+    ),
+    "renda_bairros": (
+        IBGE_RENDA_BASE
+        + "Agregados_por_bairros_renda_responsavel_BR_20260508_csv.zip"
     ),
     "renda_dicionario": (
         IBGE_RENDA_BASE + "dicionario_de_dados_renda_responsavel_20260508.xlsx"
@@ -382,6 +394,30 @@ def download_censo(*, force: bool) -> list[dict]:
         item["source"] = f"IBGE Censo 2022: {label}"
         results.append(item)
 
+    # Agregados oficiais por bairro: evitam reconstruir médias de renda a partir
+    # de setores (o denominador exato da média não é divulgado no arquivo setorial).
+    bairro_target = RAW_DIR / "ibge" / "censo2022" / "agregados_bairro"
+    bairro_target.mkdir(parents=True, exist_ok=True)
+    bairro_csv_dir = IBGE_CENSO_BASE + "Agregados_por_Bairro_csv/"
+    bairro_specs = [
+        (
+            "censo_bairros_basico",
+            r"Agregados_por_bairros_basico_BR(?:_\d{8})?\.zip",
+            CURRENT_FALLBACKS["censo_bairros_basico"],
+        ),
+        (
+            "censo_bairros_demografia",
+            r"Agregados_por_bairros_demografia_BR(?:_\d{8})?\.zip",
+            CURRENT_FALLBACKS["censo_bairros_demografia"],
+        ),
+    ]
+    for label, pattern, fallback in bairro_specs:
+        url = latest_matching_file(bairro_csv_dir, pattern, fallback)
+        destination = bairro_target / unquote(Path(urlparse(url).path).name)
+        item = download_file(url, destination, force=force)
+        item["source"] = f"IBGE Censo 2022: {label}"
+        results.append(item)
+
     renda_target = RAW_DIR / "ibge" / "censo2022" / "renda_responsavel"
     renda_target.mkdir(parents=True, exist_ok=True)
     renda_specs = [
@@ -402,6 +438,18 @@ def download_censo(*, force: bool) -> list[dict]:
         item = download_file(url, destination, force=force)
         item["source"] = f"IBGE Censo 2022: {label}"
         results.append(item)
+
+    renda_bairro_target = RAW_DIR / "ibge" / "censo2022" / "renda_responsavel_bairro"
+    renda_bairro_target.mkdir(parents=True, exist_ok=True)
+    url = latest_matching_file(
+        IBGE_RENDA_BASE,
+        r"Agregados_por_bairros_renda_responsavel_BR_\d{8}_csv\.zip",
+        CURRENT_FALLBACKS["renda_bairros"],
+    )
+    destination = renda_bairro_target / unquote(Path(urlparse(url).path).name)
+    item = download_file(url, destination, force=force)
+    item["source"] = "IBGE Censo 2022: renda_bairros"
+    results.append(item)
 
     return results
 
