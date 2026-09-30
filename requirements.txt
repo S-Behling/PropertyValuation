@@ -25,6 +25,10 @@ pyogrio>=0.9,<1.0
 osmnx
 networkx
 
+# Processa estatística espacial
+libpysal
+esda
+
 # Processa matching aproximado de enderecos
 rapidfuzz>=3.9,<4.0
 
