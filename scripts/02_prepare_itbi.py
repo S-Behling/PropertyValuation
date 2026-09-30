@@ -2,7 +2,7 @@
 """Prepara e limpa os arquivos anuais de ITBI de Porto Alegre.
 
 Entrada esperada:
-    raw/porto_alegre/itbi/*.csv
+    data/raw/porto_alegre/itbi/*.csv
 
 Saídas:
     data/interim/itbi_units_clean.parquet
@@ -48,7 +48,7 @@ import pandas as pd
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_INPUT = PROJECT_ROOT / "raw" / "porto_alegre" / "itbi"
+DEFAULT_INPUT = PROJECT_ROOT / "data" / "raw" / "porto_alegre" / "itbi"
 DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "interim"
 
 CANONICAL_COLUMNS = [
