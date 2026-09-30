@@ -317,7 +317,6 @@ def read_cnefe(zip_path: Path) -> pd.DataFrame:
                         dtype="string",
                         encoding="latin-1",
                         engine="python",
-                        low_memory=False,
                     )
 
     frame = frame.rename(columns={col: normalize_header(col) for col in frame.columns})
