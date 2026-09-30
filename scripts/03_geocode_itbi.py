@@ -4,7 +4,7 @@
 Entrada:
     data/interim/itbi_units_clean.parquet
     data/interim/itbi_transactions_clean.parquet
-    raw/ibge/cnefe2022/4314902_PORTO_ALEGRE.zip
+    data/raw/ibge/cnefe2022/4314902_PORTO_ALEGRE.zip
 
 Saídas:
     data/interim/cnefe_address_index.parquet
@@ -59,7 +59,7 @@ DEFAULT_UNITS = PROJECT_ROOT / "data" / "interim" / "itbi_units_clean.parquet"
 DEFAULT_TRANSACTIONS = (
     PROJECT_ROOT / "data" / "interim" / "itbi_transactions_clean.parquet"
 )
-DEFAULT_CNEFE_DIR = PROJECT_ROOT / "raw" / "ibge" / "cnefe2022"
+DEFAULT_CNEFE_DIR = PROJECT_ROOT / "data" / "raw" / "ibge" / "cnefe2022"
 DEFAULT_INDEX = PROJECT_ROOT / "data" / "interim" / "cnefe_address_index.parquet"
 DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "processed"
 
