@@ -24,5 +24,6 @@ PropertyValuation/
 ├── outputs/
 │   ├── maps/
 │   ├── figures/
-│   └── tables/
+│   ├── tables/
+│   └── property_valuation_report.html
 └── reports/
