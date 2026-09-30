@@ -513,6 +513,7 @@ def generate_report(
     sectors: pd.DataFrame,
     figures_dir: Path,
     maps_dir: Path,
+    tables_dir: Path,
     report_path: Path,
 ) -> None:
     """Processa gráficos e consolida o relatório HTML autocontido."""
@@ -645,6 +646,14 @@ def generate_report(
             ),
         ]
     )
+
+    catalog = collect_output_catalog(
+        tables_dir=tables_dir,
+        maps_dir=maps_dir,
+        figures_dir=figures_dir,
+        report_path=report_path,
+    )
+    catalog_html = output_catalog_html(catalog)
 
     figure_cards = [
         image_card(figures["transactions_year"], "Transações anuais"),
@@ -840,6 +849,7 @@ def main() -> int:
             sectors=sectors,
             figures_dir=figures_dir,
             maps_dir=maps_dir,
+            tables_dir=tables_dir,
             report_path=report_path,
         )
 
