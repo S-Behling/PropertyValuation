@@ -202,6 +202,10 @@ def mode_or_none(series: pd.Series) -> object:
     return modes.iloc[0] if not modes.empty else values.iloc[0]
 
 
+def present(value: object) -> bool:
+    return value is not None and not pd.isna(value) and str(value).strip() != ""
+
+
 def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     radius = 6_371_008.8
     phi1 = math.radians(lat1)
@@ -433,10 +437,10 @@ def make_lookup(index: pd.DataFrame) -> dict[str, Any]:
         street = record.get("street_key")
         number = record.get("number_key")
         cep = record.get("cep_key")
-        if not street or not number:
+        if not present(street) or not present(number):
             continue
 
-        if cep and not pd.isna(cep):
+        if present(cep):
             exact3[(str(street), str(number), str(cep))] = record
             cep_num[(str(cep), str(number))].append(record)
             street_cep[(str(street), str(cep))].append(record)
@@ -537,33 +541,33 @@ def match_one_address(
         "geocode_score": 0.0,
     }
 
-    if not street:
+    if not present(street):
         return result
 
     record: dict | None = None
     method = "unmatched"
     score = 0.0
 
-    if number and cep:
-        record = lookup["exact3"].get((street, number, cep))
+    if present(number) and present(cep):
+        record = lookup["exact3"].get((str(street), str(number), str(cep)))
         if record is not None:
             method, score = "exact_street_number_cep", 100.0
 
-    if record is None and number:
-        record = lookup["exact2"].get((street, number))
+    if record is None and present(number):
+        record = lookup["exact2"].get((str(street), str(number)))
         if record is not None:
             method, score = "exact_street_number", 96.0
 
-    if record is None and number and cep:
-        candidates = lookup["cep_num"].get((cep, number), [])
+    if record is None and present(number) and present(cep):
+        candidates = lookup["cep_num"].get((str(cep), str(number)), [])
         if candidates:
             record, fuzzy_score = choose_fuzzy(street, candidates, threshold=78.0)
             if record is not None and fuzzy_score is not None:
                 method = "fuzzy_street_exact_number_cep"
                 score = min(94.0, 75.0 + fuzzy_score * 0.20)
 
-    if record is None and number:
-        candidates = lookup["by_number"].get(number, [])
+    if record is None and present(number):
+        candidates = lookup["by_number"].get(str(number), [])
         # Evita fuzzy global muito ambíguo em números extremamente comuns.
         if 0 < len(candidates) <= 500:
             record, fuzzy_score = choose_fuzzy(
@@ -573,8 +577,8 @@ def match_one_address(
                 method = "fuzzy_street_exact_number"
                 score = min(92.0, 70.0 + fuzzy_score * 0.22)
 
-    if record is None and allow_street_centroid and cep:
-        candidates = lookup["street_cep"].get((street, cep), [])
+    if record is None and allow_street_centroid and present(cep):
+        candidates = lookup["street_cep"].get((str(street), str(cep)), [])
         if candidates:
             record = centroid_record(candidates)
             if record is not None:
