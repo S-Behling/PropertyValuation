@@ -267,6 +267,243 @@ def table_html(frame: pd.DataFrame, columns: list[str]) -> str:
     return view.to_html(index=False, border=0, classes="data-table")
 
 
+
+def describe_output(path: Path) -> tuple[str, str]:
+    """Analisa o nome do output e retorna seu tipo e sua finalidade."""
+    name = path.name
+
+    table_descriptions = {
+        "market_indicators_city_year.csv": (
+            "Tabela",
+            "Processa indicadores anuais do mercado na escala municipal, "
+            "incluindo transações, base tributária real, valor real por m², "
+            "área, cobertura temporal e variações anuais comparáveis.",
+        ),
+        "market_indicators_city_month.csv": (
+            "Tabela",
+            "Processa indicadores mensais do mercado para analisar tendência, "
+            "sazonalidade e cobertura temporal.",
+        ),
+        "market_indicators_city_ytd_comparable.csv": (
+            "Tabela",
+            "Analisa anos em uma mesma janela janeiro–mês limite, permitindo "
+            "comparar períodos parciais com anos anteriores.",
+        ),
+        "market_indicators_neighborhood_year.csv": (
+            "Tabela",
+            "Processa indicadores por bairro e ano, incluindo atividade, "
+            "valor real por m² e participação no mercado municipal.",
+        ),
+        "market_indicators_planning_region_year.csv": (
+            "Tabela",
+            "Processa indicadores anuais por Região de Planejamento quando a "
+            "camada municipal correspondente está disponível.",
+        ),
+        "market_indicators_op_region_year.csv": (
+            "Tabela",
+            "Processa indicadores anuais por Região do Orçamento Participativo.",
+        ),
+        "market_indicators_sector_year.csv": (
+            "Tabela",
+            "Processa indicadores anuais por setor censitário e constitui a "
+            "base agregada principal da análise espacial.",
+        ),
+    }
+    if name in table_descriptions:
+        return table_descriptions[name]
+
+    figure_descriptions = {
+        "market_transactions_year.png": (
+            "Gráfico",
+            "Mostra o número de transações da amostra de mercado por ano e "
+            "destaca anos incompletos.",
+        ),
+        "market_value_m2_year.png": (
+            "Gráfico",
+            "Mostra a evolução anual do valor real mediano da base tributária "
+            "por metro quadrado.",
+        ),
+        "market_transactions_month.png": (
+            "Gráfico",
+            "Mostra a série mensal de transações para analisar tendência e "
+            "sazonalidade.",
+        ),
+        "market_value_m2_month.png": (
+            "Gráfico",
+            "Mostra a série mensal do valor real mediano da base tributária "
+            "por metro quadrado.",
+        ),
+        "market_transactions_ytd.png": (
+            "Gráfico",
+            "Compara o número de transações em janelas YTD equivalentes entre "
+            "os anos.",
+        ),
+        "market_value_m2_ytd.png": (
+            "Gráfico",
+            "Compara o valor real mediano por m² em janelas YTD equivalentes.",
+        ),
+        "top_neighborhoods_transactions.png": (
+            "Gráfico",
+            "Mostra os bairros com maior número de transações no último ano "
+            "completo.",
+        ),
+        "top_neighborhoods_value_m2.png": (
+            "Gráfico",
+            "Mostra os bairros com maiores valores reais medianos por m², "
+            "aplicando amostra mínima de transações.",
+        ),
+        "op_region_transactions.png": (
+            "Gráfico",
+            "Compara a atividade imobiliária entre Regiões do Orçamento "
+            "Participativo.",
+        ),
+        "op_region_value_m2.png": (
+            "Gráfico",
+            "Compara o valor real mediano por m² entre Regiões do Orçamento "
+            "Participativo.",
+        ),
+        "sector_activity_vs_value.png": (
+            "Gráfico",
+            "Analisa a relação entre número de transações e valor real mediano "
+            "por m² nos setores censitários.",
+        ),
+        "global_moran_by_year.png": (
+            "Gráfico",
+            "Mostra a evolução temporal da autocorrelação espacial global "
+            "medida pelo Moran's I.",
+        ),
+    }
+    if name in figure_descriptions:
+        return figure_descriptions[name]
+
+    if name.startswith("sector_value_m2_") and name.endswith(".png"):
+        year = name.removeprefix("sector_value_m2_").removesuffix(".png")
+        return (
+            "Mapa",
+            f"Mostra a distribuição espacial do valor real mediano da base "
+            f"tributária por m² nos setores censitários em {year}.",
+        )
+
+    if name.startswith("sector_transactions_") and name.endswith(".png"):
+        year = name.removeprefix("sector_transactions_").removesuffix(".png")
+        return (
+            "Mapa",
+            f"Mostra o número de transações por setor censitário em {year}.",
+        )
+
+    if name.startswith("transaction_heatmap_") and name.endswith(".png"):
+        year = name.removeprefix("transaction_heatmap_").removesuffix(".png")
+        return (
+            "Mapa",
+            f"Mostra a concentração espacial das transações em {year} por "
+            "densidade hexagonal em coordenadas projetadas.",
+        )
+
+    if name.startswith("local_moran_value_") and name.endswith(".png"):
+        year = name.removeprefix("local_moran_value_").removesuffix(".png")
+        return (
+            "Mapa",
+            f"Mostra clusters e outliers espaciais Local Moran/LISA do valor "
+            f"real mediano por m² em {year}.",
+        )
+
+    census_descriptions = {
+        "census_income_sector_2022.png": (
+            "Mapa",
+            "Mostra o rendimento nominal médio mensal da pessoa responsável "
+            "com rendimento por setor censitário no Censo 2022.",
+        ),
+        "census_age_sector_2022.png": (
+            "Mapa",
+            "Mostra a idade média aproximada por setor censitário no Censo 2022.",
+        ),
+        "census_household_size_sector_2022.png": (
+            "Mapa",
+            "Mostra a média de moradores por domicílio por setor censitário "
+            "no Censo 2022.",
+        ),
+    }
+    if name in census_descriptions:
+        return census_descriptions[name]
+
+    # Analisa outputs adicionais sem omiti-los do catálogo.
+    if path.suffix.lower() == ".csv":
+        return "Tabela", "Tabela adicional produzida pelo pipeline."
+    if path.parent.name.lower() == "maps":
+        return "Mapa", "Mapa adicional produzido pelo pipeline."
+    return "Gráfico", "Gráfico adicional produzido pelo pipeline."
+
+
+def collect_output_catalog(
+    tables_dir: Path,
+    maps_dir: Path,
+    figures_dir: Path,
+    report_path: Path,
+) -> pd.DataFrame:
+    """Processa o inventário de mapas, gráficos e tabelas gerados."""
+    rows: list[dict[str, str]] = []
+
+    for directory in (tables_dir, maps_dir, figures_dir):
+        if not directory.exists():
+            continue
+
+        for path in sorted(directory.iterdir()):
+            if not path.is_file():
+                continue
+            if path.suffix.lower() not in {".csv", ".png"}:
+                continue
+
+            output_type, description = describe_output(path)
+
+            # Processa links relativos ao HTML para manter o relatório portátil.
+            relative_link = Path(
+                os.path.relpath(path, start=report_path.parent)
+            ).as_posix()
+
+            rows.append(
+                {
+                    "Tipo": output_type,
+                    "Arquivo": path.name,
+                    "Caminho": path.relative_to(PROJECT_ROOT).as_posix(),
+                    "Link": relative_link,
+                    "O que mostra": description,
+                }
+            )
+
+    return pd.DataFrame(rows)
+
+
+def output_catalog_html(catalog: pd.DataFrame) -> str:
+    """Processa a aba HTML com o catálogo dos outputs existentes."""
+    if catalog.empty:
+        return (
+            '<p class="muted">Nenhum mapa, gráfico ou tabela foi encontrado '
+            "nos diretórios de outputs.</p>"
+        )
+
+    rows = []
+    for record in catalog.to_dict("records"):
+        link = html.escape(str(record["Link"]))
+        filename = html.escape(str(record["Arquivo"]))
+        rows.append(
+            "<tr>"
+            f"<td>{html.escape(str(record['Tipo']))}</td>"
+            f'<td><a href="{link}" target="_blank">{filename}</a></td>'
+            f"<td><code>{html.escape(str(record['Caminho']))}</code></td>"
+            f"<td>{html.escape(str(record['O que mostra']))}</td>"
+            "</tr>"
+        )
+
+    return (
+        '<div class="catalog-summary">'
+        f"<strong>{len(catalog)}</strong> outputs encontrados."
+        "</div>"
+        '<div class="table-scroll"><table class="catalog-table">'
+        "<thead><tr><th>Tipo</th><th>Arquivo</th><th>Caminho</th>"
+        "<th>O que mostra</th></tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody></table></div>"
+    )
+
 def generate_report(
     city: pd.DataFrame,
     monthly: pd.DataFrame,
